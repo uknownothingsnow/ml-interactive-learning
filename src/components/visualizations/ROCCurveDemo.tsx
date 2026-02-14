@@ -192,7 +192,7 @@ export function ROCCurveDemo() {
       .duration(2000)
       .attr('stroke-dashoffset', 0)
 
-    // AUC 区域填充
+    // AUC 区域填充（整个曲线下方，低透明度）
     const area = d3.area<[number, number]>()
       .x(d => xScale(d[0]))
       .y0(innerHeight)
@@ -202,8 +202,41 @@ export function ROCCurveDemo() {
     g.append('path')
       .datum(rocPoints)
       .attr('fill', '#58C4DD')
-      .attr('opacity', 0.2)
+      .attr('opacity', 0.1)
       .attr('d', area)
+
+    // 动态高亮：从起点到当前操作点的部分面积
+    const currentIndex = rocPoints.findIndex(p => p[0] >= currentPoint[0])
+    const partialPoints = rocPoints.slice(0, Math.max(currentIndex, 1))
+    // 添加当前操作点，确保精确到当前阈值
+    if (currentIndex > 0 && currentIndex < rocPoints.length) {
+      partialPoints.push(currentPoint)
+    }
+
+    g.append('path')
+      .datum(partialPoints)
+      .attr('fill', '#F59E0B')
+      .attr('opacity', 0.3)
+      .attr('d', area)
+      .transition()
+      .duration(300)
+
+    // 计算部分 AUC（从起点到当前操作点）
+    let partialAuc = 0
+    for (let i = 1; i < partialPoints.length; i++) {
+      const width = partialPoints[i][0] - partialPoints[i - 1][0]
+      const height = (partialPoints[i][1] + partialPoints[i - 1][1]) / 2
+      partialAuc += width * height
+    }
+
+    // 添加部分 AUC 文本标注
+    g.append('text')
+      .attr('x', innerWidth - 80)
+      .attr('y', 55)
+      .attr('fill', '#F59E0B')
+      .attr('font-size', '14px')
+      .attr('font-weight', 'bold')
+      .text(`部分面积 = ${partialAuc.toFixed(3)}`)
 
     // 当前操作点（根据阈值）
     g.append('circle')
@@ -360,16 +393,23 @@ export function ROCCurveDemo() {
       {/* 说明文字 */}
       <div className="mt-6 text-sm text-white space-y-2">
         <p>
-          <strong className="text-ml-blue">AUC (Area Under Curve)</strong>:
-          曲线下方面积，值越接近1，模型性能越好。当前 AUC = {auc.toFixed(3)}
+          <strong className="text-ml-blue">完整 AUC</strong>:
+          整条 ROC 曲线下方的蓝色半透明区域，表示模型在所有阈值下的综合性能。当前 AUC = {auc.toFixed(3)}
+        </p>
+        <p>
+          <strong className="text-ml-yellow">橙色高亮区域</strong>:
+          从起点 (0,0) 到当前操作点的部分面积。调整阈值滑块，观察橙色区域如何动态变化！
         </p>
         <p>
           <strong className="text-ml-yellow">橙色圆点</strong>:
-          表示当前阈值下的操作点，调整滑块可观察不同阈值对分类结果的影响
+          表示当前阈值下的操作点 (FPR, TPR)，对应右侧混淆矩阵的统计结果
         </p>
         <p>
           <strong className="text-white">灰色虚线</strong>:
           表示随机猜测的性能基线（AUC = 0.5）
+        </p>
+        <p className="text-xs text-gray-400 italic">
+          💡 提示：降低阈值 → 更多样本被预测为正类 → FPR 和 TPR 同时增加 → 操作点向右上方移动
         </p>
       </div>
     </div>
