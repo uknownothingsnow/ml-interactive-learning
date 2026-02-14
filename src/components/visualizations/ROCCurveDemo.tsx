@@ -58,6 +58,9 @@ export function ROCCurveDemo() {
       points.push([fpr, tpr])
     })
 
+    // 反转顺序：从 (0,0) 到 (1,1)，确保 FPR 递增
+    points.reverse()
+
     setRocPoints(points)
 
     // 计算 AUC（梯形法则）
