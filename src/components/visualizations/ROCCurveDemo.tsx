@@ -202,7 +202,7 @@ export function ROCCurveDemo() {
     g.append('path')
       .datum(rocPoints)
       .attr('fill', '#58C4DD')
-      .attr('opacity', 0.1)
+      .attr('opacity', 0.05)
       .attr('d', area)
 
     // 动态高亮：从起点到当前操作点的部分面积
@@ -213,11 +213,27 @@ export function ROCCurveDemo() {
       partialPoints.push(currentPoint)
     }
 
+    // 橙色高亮区域（更高透明度）
     g.append('path')
       .datum(partialPoints)
       .attr('fill', '#F59E0B')
-      .attr('opacity', 0.3)
+      .attr('opacity', 0.5)
       .attr('d', area)
+      .transition()
+      .duration(300)
+
+    // 添加橙色边框，使区域更明显
+    const partialLine = d3.line<[number, number]>()
+      .x(d => xScale(d[0]))
+      .y(d => yScale(d[1]))
+      .curve(d3.curveMonotoneX)
+
+    g.append('path')
+      .datum(partialPoints)
+      .attr('fill', 'none')
+      .attr('stroke', '#F59E0B')
+      .attr('stroke-width', 2)
+      .attr('d', partialLine)
       .transition()
       .duration(300)
 
@@ -229,14 +245,23 @@ export function ROCCurveDemo() {
       partialAuc += width * height
     }
 
-    // 添加部分 AUC 文本标注
+    // 添加部分 AUC 文本标注（更大、更醒目）
     g.append('text')
-      .attr('x', innerWidth - 80)
+      .attr('x', innerWidth - 120)
       .attr('y', 55)
       .attr('fill', '#F59E0B')
-      .attr('font-size', '14px')
+      .attr('font-size', '16px')
       .attr('font-weight', 'bold')
-      .text(`部分面积 = ${partialAuc.toFixed(3)}`)
+      .text(`当前面积: ${partialAuc.toFixed(3)}`)
+
+    // 添加百分比显示
+    const percentage = (partialAuc / auc * 100).toFixed(1)
+    g.append('text')
+      .attr('x', innerWidth - 120)
+      .attr('y', 75)
+      .attr('fill', '#F59E0B')
+      .attr('font-size', '14px')
+      .text(`(${percentage}% of total)`)
 
     // 当前操作点（根据阈值）
     g.append('circle')
@@ -292,6 +317,24 @@ export function ROCCurveDemo() {
   const f1Score = (precision + recall) > 0
     ? 2 * (precision * recall) / (precision + recall)
     : 0
+
+  // 计算部分 AUC（用于右侧面板显示）
+  const [partialAuc, setPartialAuc] = useState(0)
+  useEffect(() => {
+    if (rocPoints.length === 0) return
+    const currentIndex = rocPoints.findIndex(p => p[0] >= currentPoint[0])
+    const partialPoints = rocPoints.slice(0, Math.max(currentIndex, 1))
+    if (currentIndex > 0 && currentIndex < rocPoints.length) {
+      partialPoints.push(currentPoint)
+    }
+    let partial = 0
+    for (let i = 1; i < partialPoints.length; i++) {
+      const width = partialPoints[i][0] - partialPoints[i - 1][0]
+      const height = (partialPoints[i][1] + partialPoints[i - 1][1]) / 2
+      partial += width * height
+    }
+    setPartialAuc(partial)
+  }, [currentPoint, rocPoints])
 
   return (
     <div className="bg-ml-bg-secondary p-6 rounded-lg">
@@ -384,6 +427,47 @@ export function ROCCurveDemo() {
               </p>
               <p className="text-white">
                 FPR: <span className="text-white font-bold">{(currentPoint[0] * 100).toFixed(1)}%</span>
+              </p>
+            </div>
+          </div>
+
+          {/* 面积对比可视化 */}
+          <div className="bg-ml-bg-dark p-4 rounded-lg border-2 border-yellow-500">
+            <h3 className="text-lg font-semibold mb-3 text-yellow-500">面积对比</h3>
+            <div className="space-y-3">
+              {/* 完整 AUC */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-cyan-400">完整 AUC</span>
+                  <span className="text-white font-bold">{auc.toFixed(3)}</span>
+                </div>
+                <div className="w-full h-6 bg-gray-700 rounded overflow-hidden">
+                  <div 
+                    className="h-full bg-cyan-500 transition-all duration-300"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              {/* 当前部分面积 */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-yellow-500">当前累积面积</span>
+                  <span className="text-white font-bold">{partialAuc.toFixed(3)}</span>
+                </div>
+                <div className="w-full h-6 bg-gray-700 rounded overflow-hidden">
+                  <div 
+                    className="h-full bg-yellow-500 transition-all duration-300"
+                    style={{ width: `${(partialAuc / auc * 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1 text-right">
+                  {(partialAuc / auc * 100).toFixed(1)}% of total
+                </p>
+              </div>
+
+              <p className="text-xs text-gray-300 italic pt-2 border-t border-gray-700">
+                💡 拖动阈值滑块，观察黄色进度条的变化！
               </p>
             </div>
           </div>
