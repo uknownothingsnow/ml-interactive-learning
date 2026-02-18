@@ -15,24 +15,31 @@ export function ROCCurveDemo() {
   const [rocPoints, setRocPoints] = useState<Array<[number, number]>>([])
   const [auc, setAuc] = useState(0)
 
-  // 生成模拟数据
+  // 生成模拟数据（使用正态分布，确保有重叠）
   useEffect(() => {
     const generateData = () => {
       const points: DataPoint[] = []
-      // 正类（label=1）：分数偏高
-      for (let i = 0; i < 100; i++) {
-        points.push({
-          score: Math.random() * 0.5 + 0.5,
-          label: 1
-        })
+      
+      // 正态分布随机数生成器 (Box-Muller 变换)
+      const normalRandom = (mean: number, stdDev: number) => {
+        const u1 = Math.random()
+        const u2 = Math.random()
+        const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
+        return z0 * stdDev + mean
       }
-      // 负类（label=0）：分数偏低
+      
+      // 正类（label=1）：分数偏高，均值0.65，标准差0.15
       for (let i = 0; i < 100; i++) {
-        points.push({
-          score: Math.random() * 0.5,
-          label: 0
-        })
+        const score = Math.max(0, Math.min(1, normalRandom(0.65, 0.15)))
+        points.push({ score, label: 1 })
       }
+      
+      // 负类（label=0）：分数偏低，均值0.35，标准差0.15
+      for (let i = 0; i < 100; i++) {
+        const score = Math.max(0, Math.min(1, normalRandom(0.35, 0.15)))
+        points.push({ score, label: 0 })
+      }
+      
       return points.sort((a, b) => b.score - a.score)
     }
     setData(generateData())
