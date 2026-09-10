@@ -1,7 +1,7 @@
 {
-  "buildCommand": "next build",
-  "devCommand": "next dev",
+  "buildCommand": "vitepress build docs",
+  "devCommand": "vitepress dev docs",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next"
+  "framework": null,
+  "outputDirectory": "docs/.vitepress/dist"
 }
