@@ -1,0 +1,206 @@
+/* ==========================================
+   机器学习交互式学习 — 阅读体验优化
+   ========================================== */
+
+/* ---------- 中文排版优化 ---------- */
+:root {
+  --vp-font-family-base: "Noto Sans SC", "PingFang SC", "Microsoft YaHei",
+    "Hiragino Sans GB", system-ui, -apple-system, sans-serif;
+  --vp-font-family-mono: "JetBrains Mono", "Fira Code", "Menlo", monospace;
+}
+
+/* 正文排版 */
+.vp-doc {
+  line-height: 1.85;
+}
+
+.vp-doc p {
+  margin: 1em 0;
+}
+
+.vp-doc li + li {
+  margin-top: 0.4em;
+}
+
+/* 标题样式 */
+.vp-doc h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 0;
+  letter-spacing: -0.02em;
+}
+
+.vp-doc h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 2.5em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 2em;
+}
+
+/* ---------- 自定义容器样式 ---------- */
+
+/* 信息卡片（对应原 InfoCard） */
+.vp-doc .custom-block {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 1.5em 0;
+}
+
+.vp-doc .custom-block .custom-block-title {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+/* details 容器（练习答案） */
+.vp-doc .custom-block.details {
+  background-color: var(--vp-c-bg-soft);
+}
+
+.vp-doc .custom-block.details summary {
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---------- 交互式可视化组件容器 ---------- */
+.demo-container {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 1.5em 0;
+  background: var(--vp-c-bg-soft);
+  overflow-x: auto;
+}
+
+.demo-container .demo-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- 公式样式增强 ---------- */
+.vp-doc .katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  padding: 0.5em 0;
+}
+
+/* ---------- 混淆矩阵网格 ---------- */
+.confusion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 400px;
+  margin: 1em auto;
+}
+
+.confusion-cell {
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  border: 2px solid var(--vp-c-border);
+}
+
+.confusion-cell.correct {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #16a34a;
+}
+
+.confusion-cell.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+}
+
+.dark .confusion-cell.correct {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.dark .confusion-cell.incorrect {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ---------- 学习目标列表 ---------- */
+.learning-objectives {
+  background: var(--vp-c-bg-soft);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 1em 0 2em;
+  border-left: 4px solid var(--vp-c-brand-1);
+}
+
+.learning-objectives h3 {
+  margin-top: 0;
+  font-size: 1.1em;
+}
+
+.learning-objectives ul {
+  margin-bottom: 0;
+}
+
+/* ---------- 信息网格（双列卡片布局） ---------- */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 1.5em 0;
+}
+
+.info-card {
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.info-card h3,
+.info-card strong:first-child {
+  color: var(--vp-c-text-1);
+}
+
+.info-card.success {
+  border-left: 4px solid #16a34a;
+}
+
+.info-card.warning {
+  border-left: 4px solid #eab308;
+}
+
+.info-card ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.info-card li {
+  margin: 0.3em 0;
+}
+
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 响应式调整 ---------- */
+@media (max-width: 768px) {
+  .demo-container {
+    padding: 16px;
+    margin: 1em -12px;
+    border-radius: 8px;
+  }
+}
