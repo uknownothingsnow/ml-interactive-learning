@@ -44,4 +44,4 @@ next-env.d.ts
 # vitepress
 docs/.vitepress/dist
 docs/.vitepress/cache
-.vitepress/
+/.vitepress/

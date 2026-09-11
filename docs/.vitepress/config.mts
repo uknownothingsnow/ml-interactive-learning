@@ -36,13 +36,14 @@ export default defineConfig({
 
     nav: [
       { text: '首页', link: '/' },
-      { text: '开始学习', link: '/chapter-02/' },
+      { text: '开始学习', link: '/chapter-01/' },
     ],
 
     sidebar: [
       {
         text: '基础篇',
         items: [
+          { text: '第1章 绪论', link: '/chapter-01/' },
           { text: '第2章 模型评估与选择', link: '/chapter-02/' },
           { text: '第3章 线性模型', link: '/chapter-03/' },
         ],

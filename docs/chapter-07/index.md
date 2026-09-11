@@ -1,6 +1,6 @@
 ---
 title: '第7章 贝叶斯分类器'
-description: '贝叶斯决策论、极大似然估计、朴素贝叶斯、半朴素贝叶斯、贝叶斯网'
+description: '贝叶斯决策论、极大似然估计、朴素贝叶斯、半朴素贝叶斯、贝叶斯网、EM算法'
 prev:
   text: '第6章 支持向量机'
   link: '/chapter-06/'
@@ -20,6 +20,7 @@ next:
 - 理解朴素贝叶斯分类器的"朴素"假设及其影响
 - 掌握拉普拉斯修正处理零概率问题
 - 了解半朴素贝叶斯和贝叶斯网的基本思想
+- 掌握 EM 算法处理含隐变量模型的基本思路
 
 </div>
 
@@ -197,6 +198,102 @@ $$P(x_1, \ldots, x_n) = \prod_{i=1}^{n} P(x_i | \text{Parents}(x_i))$$
 | **目标** | 给定证据变量的观测值，计算查询变量的后验概率分布 | 从数据中学习贝叶斯网的结构和参数 |
 | **方法** | 精确推断：变量消除；近似推断：吉布斯采样 | 参数学习：MLE/MAP；结构学习：评分搜索 |
 
+## 7.6 EM 算法
+
+::: tip 🔄 处理隐变量的利器
+**EM 算法**（Expectation-Maximization）是一种迭代优化算法，专门用于含**隐变量**（latent variable）的概率模型的参数估计。当数据不完整或存在未观测变量时，极大似然估计无法直接求解，EM 算法提供了一种优雅的解决方案。
+:::
+
+### 为什么需要 EM 算法？
+
+在很多实际问题中，观测数据 $X$ 背后存在未观测到的隐变量 $Z$。例如：
+
+- **高斯混合模型（GMM）**：知道数据来自多个高斯分布的混合，但不知道每个样本具体来自哪个分布
+- **缺失数据**：部分属性值缺失
+
+此时对数似然函数含有对隐变量的求和（或积分），难以直接优化：
+
+$$LL(\Theta | X) = \ln P(X|\Theta) = \ln \sum_Z P(X, Z | \Theta)$$
+
+对数内部的求和使得我们无法将对数直接作用到各个分量上，传统的 MLE 求导令其为零的方法失效了。
+
+### 算法步骤
+
+EM 算法通过**交替执行两个步骤**来迭代求解：
+
+**E 步（Expectation）**：基于当前参数 $\Theta^t$，计算隐变量 $Z$ 的后验分布，并求期望：
+
+$$Q(\Theta | \Theta^t) = \mathbb{E}_{Z|X,\Theta^t}[\ln P(X, Z | \Theta)]$$
+
+**M 步（Maximization）**：最大化 $Q$ 函数，更新参数：
+
+$$\Theta^{t+1} = \arg\max_\Theta Q(\Theta | \Theta^t)$$
+
+重复 E 步和 M 步，直到参数收敛（即 $\|\Theta^{t+1} - \Theta^t\| < \epsilon$）。
+
+::: info 💡 直观理解："鸡生蛋，蛋生鸡"
+以**高斯混合模型**为例理解 EM 算法的思路：
+
+- 如果**知道每个样本属于哪个高斯分布**（隐变量已知），就能直接用 MLE 估计每个高斯的均值和方差 → 这就是 **M 步**
+- 如果**知道每个高斯分布的参数**，就能计算每个样本属于各个高斯分布的概率 → 这就是 **E 步**
+
+两者互相依赖，EM 算法的巧妙之处在于：**先猜一个初始参数，然后交替进行"猜归属"和"更新参数"，逐步逼近最优解**。
+:::
+
+### EM 算法的一般形式
+
+将 E 步和 M 步合并，EM 算法可以用一个统一的公式表达：
+
+$$\Theta^{t+1} = \arg\max_\Theta \int_Z P(Z|X,\Theta^t) \ln P(X,Z|\Theta) \, dZ$$
+
+其中：
+- $P(Z|X,\Theta^t)$ 是 E 步计算的隐变量后验分布（基于当前参数）
+- $\ln P(X,Z|\Theta)$ 是完整数据的对数似然
+- 积分（或求和）对隐变量取期望，得到 $Q$ 函数
+- M 步对 $\Theta$ 最大化该期望
+
+::: details 📖 从 Jensen 不等式理解 EM
+EM 算法的理论基础来自 **Jensen 不等式**。由于 $\ln$ 是凹函数，对任意分布 $q(Z)$ 有：
+
+$$\ln P(X|\Theta) = \ln \sum_Z q(Z) \frac{P(X,Z|\Theta)}{q(Z)} \geq \sum_Z q(Z) \ln \frac{P(X,Z|\Theta)}{q(Z)}$$
+
+右侧称为**证据下界**（ELBO）。当 $q(Z) = P(Z|X,\Theta^t)$ 时，不等式取等号，此时最大化 ELBO 等价于最大化 $Q$ 函数。因此 EM 算法本质上是在**逐步抬高似然函数的下界**。
+:::
+
+### 应用示例：高斯混合模型（GMM）
+
+**高斯混合模型**是 EM 算法最经典的应用。假设数据由 $K$ 个高斯分布混合而成：
+
+$$P(\mathbf{x}) = \sum_{k=1}^{K} \alpha_k \cdot \mathcal{N}(\mathbf{x} | \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)$$
+
+其中 $\alpha_k$ 为混合系数（$\sum_k \alpha_k = 1$），$\boldsymbol{\mu}_k$ 和 $\boldsymbol{\Sigma}_k$ 分别为第 $k$ 个高斯分布的均值和协方差矩阵。
+
+隐变量 $z_j \in \{1, 2, \ldots, K\}$ 表示样本 $\mathbf{x}_j$ 属于哪个高斯分布。
+
+**GMM 的 E 步**：计算每个样本属于每个高斯分布的后验概率（"责任"）：
+
+$$\gamma_{jk} = P(z_j = k | \mathbf{x}_j, \Theta^t) = \frac{\alpha_k \cdot \mathcal{N}(\mathbf{x}_j | \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)}{\sum_{l=1}^{K} \alpha_l \cdot \mathcal{N}(\mathbf{x}_j | \boldsymbol{\mu}_l, \boldsymbol{\Sigma}_l)}$$
+
+**GMM 的 M 步**：基于后验概率更新各高斯分布的参数：
+
+$$\boldsymbol{\mu}_k^{new} = \frac{\sum_{j=1}^{N} \gamma_{jk} \, \mathbf{x}_j}{\sum_{j=1}^{N} \gamma_{jk}}, \quad \boldsymbol{\Sigma}_k^{new} = \frac{\sum_{j=1}^{N} \gamma_{jk} (\mathbf{x}_j - \boldsymbol{\mu}_k^{new})(\mathbf{x}_j - \boldsymbol{\mu}_k^{new})^T}{\sum_{j=1}^{N} \gamma_{jk}}, \quad \alpha_k^{new} = \frac{\sum_{j=1}^{N} \gamma_{jk}}{N}$$
+
+::: info 💡 GMM 参数更新的直觉
+- **均值** $\boldsymbol{\mu}_k$：所有样本的加权平均，权重为样本属于该分布的概率
+- **协方差** $\boldsymbol{\Sigma}_k$：加权协方差矩阵
+- **混合系数** $\alpha_k$：所有样本对该分布的平均归属概率
+
+本质上就是"**软分配**"——每个样本以不同概率被分配到各个高斯分布，然后按权重统计每个分布的参数。
+:::
+
+### 收敛性
+
+::: warning ⚠️ 收敛保证与局限
+- ✅ **似然单调递增**：每次迭代后 $LL(\Theta^{t+1}) \geq LL(\Theta^{t})$，算法一定会收敛
+- ⚠️ **局部最优**：EM 算法只能保证收敛到**局部最优解**，不保证全局最优
+- 💡 **实践建议**：多次随机初始化，取似然最大的结果；或使用 K-Means 等方法提供较好的初始值
+:::
+
 ## 📝 本章小结
 
 ::: tip 总结
@@ -205,5 +302,6 @@ $$P(x_1, \ldots, x_n) = \prod_{i=1}^{n} P(x_i | \text{Parents}(x_i))$$
 - ✅ 朴素贝叶斯通过属性条件独立性假设大幅简化计算，虽然假设强但实际效果好
 - ✅ 拉普拉斯修正是处理零概率问题的标准方法，确保所有概率非零
 - ✅ 半朴素贝叶斯和贝叶斯网在模型复杂度和性能之间寻求更好的平衡
+- ✅ EM 算法通过交替执行 E 步和 M 步，解决含隐变量模型的参数估计问题
 - ✅ 贝叶斯方法特别适合小样本场景和需要融合先验知识的情况
 :::

@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: 开始学习 →
-      link: /chapter-02/
+      link: /chapter-01/
     - theme: alt
       text: 在 GitHub 上查看
       link: https://github.com
@@ -22,7 +22,7 @@ features:
     details: KaTeX 渲染的数学公式，配合步骤化推导动画，帮助你真正理解"为什么"而不只是"是什么"。
   - icon: 📚
     title: 完整覆盖教材
-    details: 涵盖周志华《机器学习》第 2 至 16 章，从模型评估到强化学习，系统性学习路径。
+    details: 涵盖周志华《机器学习》第 1 至 16 章，从绪论到强化学习，系统性学习路径。
   - icon: 🔍
     title: 全文搜索
     details: 支持对所有章节内容进行快速搜索，随时查找你需要的概念。
